@@ -132,118 +132,66 @@ class _MyHomePageState extends State<MyHomePage>{
                     ),
                   ),
                   
-                  
-                  GestureDetector(
-                    onTap: (){
-                    },
-                    child: Container(
-                      height: 190,
-                      margin: EdgeInsets.symmetric(horizontal: 20),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Stack(
-                              children: [
-                                Container(
-                                  height: 190,
-                                  width: 180,
-                                  decoration: BoxDecoration(color: Colors.orange[100],
-                                  borderRadius: BorderRadius.circular(20),
-                                    boxShadow: shadowList,
-                                  ),
-                                  margin: EdgeInsets.only(top: 30),
-                                ),
-                                Align(
-                                  child: Container(
-                                    margin: EdgeInsets.only(top: 30),
-                                    height: 130, 
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(20)
-                                    ),
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(20),
-                                      child: Image.asset(
-                                          'images/giuliap.jpg',
-                                          height: 150.0,
-                                          width: 100.0,
-                                      ),
-                                    ) 
-                                  )
-                                )
-                              ],
-                            ),
-                          ),
-                          Expanded(child: Container(
-                            margin: EdgeInsets.only(top: 50,bottom: 15),
-                            decoration: BoxDecoration(color: Colors.white,
-
-                            boxShadow: shadowList,
-                              borderRadius: BorderRadius.only(
-                                topRight: Radius.circular(20),
-                                bottomRight: Radius.circular(20)
-
-                              )
-                            ),
-
-                          ))
-
-                        ],
-                      ),
-
-                    ),
-                  ),
-                  Container(
-                    height: 190,
-                    margin: EdgeInsets.symmetric(horizontal: 20),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Stack(
-                            children: [
-                              Container(
-                                decoration: BoxDecoration(color: Colors.orange[200],
-                                  borderRadius: BorderRadius.circular(20),
-                                  boxShadow: shadowList,
-                                ),
-                                margin: EdgeInsets.only(top: 30),
+                Container(
+                    height: 400,
+                    width: MediaQuery.of(context).size.width,
+                    child: ListView.builder(
+                    scrollDirection: Axis.vertical,
+                    itemCount: testelista.length,
+                    itemBuilder: (context,index){
+                      return GestureDetector(
+                        onTap: (){
+                          print(testelista[index]['name']);
+                        },
+                        child: Container(
+                        child: Column(
+                          children: [
+                            SizedBox(height: 8),
+                            Container(
+                              height: 150,
+                              width: 300,
+                              padding: EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                boxShadow: shadowList,
+                                borderRadius: BorderRadius.circular(10)
                               ),
-                              Align(
-                                child: Container(
-                                  margin: EdgeInsets.only(top: 30),
-                                  height: 130, 
-                                  child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(20),
-                                      child: Image.asset(
-                                          'images/giuliap2.jpg',
-                                          height: 150.0,
-                                          width: 100.0,
-                                      ),
-                                    ) 
-                                  )
-                              )
-                            ],
-                          ),
+                              child: Row(children: [
+                                Image.asset(testelista[index]['iconPath'], height: 110, width: 110),
+                                Container(
+                                  height: 120,
+                                  width: 160,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                  ),
+                                  child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    SizedBox(height: 5),
+                                    Row(children: [
+                                      Text(testelista[index]['name'], style: TextStyle(fontSize: 16),),
+                                     
+                                       Icon(Icons.chevron_right_outlined, color: Colors.grey),
+                                    ],),
+                                    SizedBox(height: 5),
+                                    Text(testelista[index]['profissao']),
+                                    SizedBox(height: 45),
+                                    Row(children: [
+                                      Text("Consulta: R\$ "),
+                                      Text(testelista[index]['valor'], style: TextStyle(color: Colors.green),),
+                                    ],)
+                                ],),)
+                              ],)
+                              
+                            ),
+                            SizedBox(height: 10),
+                          ],
                         ),
-                        Expanded(child: Container(
-                          margin: EdgeInsets.only(top: 50,bottom: 15),
-                          decoration: BoxDecoration(color: Colors.white,
-
-                              boxShadow: shadowList,
-                              borderRadius: BorderRadius.only(
-                                  topRight: Radius.circular(20),
-                                  bottomRight: Radius.circular(20)
-
-                              )
-                          ),
-
-                        ))
-
-                      ],
+                      ));
+                    },
                     ),
-
-                  ),
-            SizedBox(height: 50,)
-
+                  ),               
                 ],
               )
             )
