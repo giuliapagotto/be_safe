@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:besafehealthcare/src/pages/details.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'dart:async'; 
@@ -139,9 +140,20 @@ class _MyHomePageState extends State<MyHomePage>{
                     scrollDirection: Axis.vertical,
                     itemCount: testelista.length,
                     itemBuilder: (context,index){
+                      
                       return GestureDetector(
+                       
                         onTap: (){
                           print(testelista[index]['name']);
+                          Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => DetailsScreen(
+                            nome: testelista[index]["name"],
+                            profissao: testelista[index]["profissao"],
+                            imagem: testelista[index]['iconPath'],
+                            descricao: testelista[index]['descricao']
+                            )),
+                        );
                         },
                         child: Container(
                         child: Column(
