@@ -1,14 +1,16 @@
 import 'dart:ui';
 
+import 'package:besafehealthcare/src/models/User.dart';
+import 'package:besafehealthcare/src/pages/ChatPage.dart';
 import 'package:flutter/material.dart';
 
-class DetailsScreen extends StatelessWidget{
-  final String nome;
-  final String profissao;
-  final String imagem;
-  final String descricao;
 
-  const DetailsScreen({Key key, this.nome, this.profissao, this.imagem, this.descricao}) : super(key: key);
+
+class DetailsScreen extends StatelessWidget{
+  final User user;
+  
+
+  const DetailsScreen({Key key, this.user}) : super(key: key);
   @override
   
   Widget build(BuildContext context) {
@@ -21,7 +23,7 @@ class DetailsScreen extends StatelessWidget{
             Container(
               height: 350,
               width: MediaQuery.of(context).size.width,
-              child:  Image.asset(this.imagem, fit: BoxFit.fitWidth,),
+              child:  Image.asset(user.iconPath, fit: BoxFit.fitWidth,),
             ),
             Container(
               height: 500,
@@ -53,25 +55,34 @@ class DetailsScreen extends StatelessWidget{
                         child: Column(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          Container(
-                          height: 55,
-                          width: 55,
-                          margin: EdgeInsets.only(
-                            top: -62,
-                            right: -245
-                          ),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.amber
-                          ),
-                          child: Icon(Icons.chat_rounded, color: Colors.white)
-                      )
+                          RaisedButton(
+                            onPressed: () =>{
+                               Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) {
+                                    return ChatPage(user);
+                                  },
+                                ),
+                              )
+                            },
+                            child: Container(
+                                height: 55,
+                                width: 55,
+                                margin: EdgeInsets.only(
+                                  top: -62,
+                                  right: -245
+                                ),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.amber
+                                ),
+                                child: Icon(Icons.chat_rounded, color: Colors.white,)
+                              ),
+                            ),
                       ])),
-                      Text(this.nome, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold), textAlign: TextAlign.left,),
+                      Text(user.name, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold), textAlign: TextAlign.left,),
                       SizedBox(height: 5,),
-                      Text(this.profissao, style: TextStyle(fontSize: 17), textAlign: TextAlign.left,),
+                      Text(user.profissao, style: TextStyle(fontSize: 17), textAlign: TextAlign.left,),
                       SizedBox(height: 40,),
-                      Text(this.descricao, style: TextStyle(fontSize: 16, color: Colors.grey,), textAlign: TextAlign.justify,)
+                      Text(user.descricao, style: TextStyle(fontSize: 16, color: Colors.grey,), textAlign: TextAlign.justify,)
                     ],),
                   )
                 ],)

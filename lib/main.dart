@@ -1,13 +1,37 @@
+import 'dart:convert';
 import 'dart:ui';
-
 import 'package:besafehealthcare/src/pages/details.dart';
+import 'package:besafehealthcare/src/pages/register.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'dart:async'; 
-import 'package:agora_rtc_engine/rtc_engine.dart';
-import 'package:besafehealthcare/src/pages/call.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:besafehealthcare/src/pages/configuration.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+
+
+final kHintTextStyle = TextStyle(
+  color: Colors.amber[200],
+  fontFamily: 'OpenSans',
+);
+
+final kLabelStyle = TextStyle(
+  color: Colors.white,
+  fontFamily: 'OpenSans',
+);
+
+final kBoxDecorationStyle = BoxDecoration(
+  color: Colors.white,
+  borderRadius: BorderRadius.circular(10.0),
+  boxShadow: [
+    BoxShadow(
+      color: Colors.black12,
+      blurRadius: 6.0,
+      offset: Offset(0, 2),
+    ),
+  ],
+);
 
 void main() => runApp(MyApp());
 
@@ -34,22 +58,250 @@ class MyHomePage extends StatefulWidget{
 
 class _MyHomePageState extends State<MyHomePage>{
 
-  @override
+  String login;
+  String senha;
+  bool emptyL = false;
+  bool emptyS = false;
+  String msgToast = '';
+  bool _rememberMe = false;
 
-  
-  /// create a channelController to retrieve text value
-  final _channelController = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  /// if channel textField is validated to have error
-  bool _validateError = false;
-
-  ClientRole _role = ClientRole.Broadcaster;
-
-  void dispose() {
-    // dispose input controller
-    _channelController.dispose();
-    super.dispose();
+  //LOGIN
+  _loginRequest() async {
+    // set up POST request arguments
+    String url = 'https://vendasprojeto.herokuapp.com/authenticate';
+    Map<String, String> headers = {"Content-type": "application/json"};
+    String json = '{"login": "${login}","senha": "${senha}"}';
+    // make POST request
+    http.Response response = await http.post(url, headers: headers, body: json);
+    // check the status code for the result
+    int statusCode = response.statusCode;
+    // this API passes back the id of the new item added to the body
+    String responseBody = response.body;
+    Map<String, dynamic> usuario = jsonDecode(responseBody);
+    print(usuario);
+    //home navigation
+    if (statusCode == 200) {
+      //Navigator.push(context, MaterialPageRoute(builder: (context) => Home()));
+      var gestor = usuario['user']['gestor'];
+      if (gestor == true) {
+        //set instance true
+        Future<bool> _setBool() async {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setBool("loginGestor", gestor);
+          print(prefs.getBool('loginGestor'));
+        }
+        _setBool();
+      }
+    }
+    //LOGIN OU SENHA INVALIDOS
+    if (statusCode == 400) {
+      Fluttertoast.showToast(
+          msg: "Login e/ou senha inválidos",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16.0);
+    }
   }
+
+
+//TELA DE LOGIN - WIDGETS
+  Widget _buildEmailTF() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Text(
+          'Login',
+          style: kLabelStyle,
+        ),
+        SizedBox(height: 10.0),
+        Container(
+          alignment: Alignment.centerLeft,
+          decoration: kBoxDecorationStyle,
+          height: 60.0,
+          child: TextFormField(
+            keyboardType: TextInputType.emailAddress,
+            style: TextStyle(color: Colors.amber, fontFamily: 'OpenSans'),
+            decoration: InputDecoration(
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.only(top: 14.0),
+              prefixIcon: Icon(
+                Icons.email,
+                color: Colors.amber,
+              ),
+              hintText: 'Login',
+              hintStyle: kHintTextStyle,
+            ),
+            validator: (String value) {
+              if (value.isEmpty) {
+                setState(() {
+                  emptyL = true;
+                });
+              }
+              return null;
+            },
+            onSaved: (String value) {
+              login = value;
+            },
+          ),
+        )
+      ],
+    );
+  }
+
+  Widget _buildSenhaTF() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Text(
+          'Senha',
+          style: kLabelStyle,
+        ),
+        SizedBox(height: 10.0),
+        Container(
+          alignment: Alignment.centerLeft,
+          decoration: kBoxDecorationStyle,
+          height: 60.0,
+          child: TextFormField(
+            obscureText: true,
+            style: TextStyle(color: Colors.amber, fontFamily: 'OpenSans'),
+            decoration: InputDecoration(
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.only(top: 14.0),
+              prefixIcon: Icon(
+                Icons.lock,
+                color: Colors.amber,
+              ),
+              hintText: 'Senha',
+              hintStyle: kHintTextStyle,
+            ),
+            validator: (String value) {
+              if (value.isEmpty) {
+                emptyS = true;
+              }
+              return null;
+            },
+            onSaved: (String value) {
+              senha = value;
+            },
+          ),
+        )
+      ],
+    );
+  }
+
+  Widget _buildEsqueceuSenhaBtn() {
+    return Container(
+      padding: EdgeInsets.only(bottom: 30.0),
+      alignment: Alignment.centerRight,
+      child: FlatButton(
+        onPressed: () => print('Forgot Password Button Pressed'),
+        padding: EdgeInsets.only(right: 0.0),
+        child: Text(
+          'Esqueceu sua senha?',
+          style: kLabelStyle,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLembrarAcessoCheckBox() {
+    return Container(
+      height: 20.0,
+      child: Row(
+        children: <Widget>[
+          Theme(
+            data: ThemeData(unselectedWidgetColor: Colors.white),
+            child: Checkbox(
+              value: _rememberMe,
+              checkColor: Colors.green,
+              activeColor: Colors.white,
+              onChanged: (value) {
+                setState(() {
+                  _rememberMe = value;
+                });
+              },
+            ),
+          ),
+          Text(
+            'Lembrar meu acesso',
+            style: kLabelStyle,
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLoginBtn() {
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: 25.0),
+      width: double.infinity,
+      child: RaisedButton(
+        elevation: 5.0,
+        onPressed: () {
+          if (!_formKey.currentState.validate()) {
+            return;
+          }
+          _formKey.currentState.save();
+          _loginRequest();
+          if (emptyL == true && emptyS == false) {
+            msgToast = 'Informe o login';
+          }
+          if (emptyL == false && emptyS == true) {
+            msgToast = 'Informe sua senha';
+          }
+          if (emptyL == true && emptyS == true) {
+            msgToast = 'Informe Login e Senha';
+          }
+          if (msgToast != '') {
+            Fluttertoast.showToast(
+                msg: msgToast,
+                toastLength: Toast.LENGTH_SHORT,
+                gravity: ToastGravity.BOTTOM,
+                timeInSecForIosWeb: 1,
+                backgroundColor: Colors.red,
+                textColor: Colors.white,
+                fontSize: 16.0);
+          }
+          emptyL = false;
+          emptyS = false;
+          msgToast = '';
+        },
+        padding: EdgeInsets.all(15.0),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(30.0)),
+        color: Colors.white,
+        child: Text('LOGIN',
+            style: TextStyle(
+                color: Color(0xFF527DAA),
+                letterSpacing: 2.0,
+                fontSize: 18.0,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'OpenSans')),
+      ),
+    );
+  }
+
+  Widget _buildCadastrarBtn() {
+    return Container(
+      padding: EdgeInsets.only(bottom: 10.0),
+      alignment: Alignment.centerRight,
+      child: FlatButton(
+        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => RegisterScreen())),
+        padding: EdgeInsets.only(right: 0.0),
+        child: Text(
+          'Não tem uma conta? Cadastre-se',
+          style: kLabelStyle,
+        ),
+      ),
+    );
+  }
+
+  //TELA ----- WIDGETS
 
   PageController _pageController;
   var selectedPage;
@@ -60,7 +312,7 @@ class _MyHomePageState extends State<MyHomePage>{
     selectedPage = 0;
   }
 
-
+  @override
   Widget build(BuildContext context){
     return Scaffold(
       
@@ -72,7 +324,7 @@ class _MyHomePageState extends State<MyHomePage>{
           physics: NeverScrollableScrollPhysics(),
           controller: _pageController,
           children: <Widget>[
-            Center(
+          Center(
             child: Container(
               child:  Text("Teste1", style: TextStyle(color: Colors.white),)//first screen,
                 ),
@@ -138,20 +390,14 @@ class _MyHomePageState extends State<MyHomePage>{
                     width: MediaQuery.of(context).size.width,
                     child: ListView.builder(
                     scrollDirection: Axis.vertical,
-                    itemCount: testelista.length,
+                    itemCount: users.length,
                     itemBuilder: (context,index){
-                      
                       return GestureDetector(
-                       
                         onTap: (){
-                          print(testelista[index]['name']);
                           Navigator.push(
                           context,
                           MaterialPageRoute(builder: (context) => DetailsScreen(
-                            nome: testelista[index]["name"],
-                            profissao: testelista[index]["profissao"],
-                            imagem: testelista[index]['iconPath'],
-                            descricao: testelista[index]['descricao']
+                            user: users[index],
                             )),
                         );
                         },
@@ -169,7 +415,7 @@ class _MyHomePageState extends State<MyHomePage>{
                                 borderRadius: BorderRadius.circular(10)
                               ),
                               child: Row(children: [
-                                Image.asset(testelista[index]['iconPath'], height: 110, width: 110),
+                                Image.asset(users[index].iconPath, height: 110, width: 110),
                                 Container(
                                   height: 120,
                                   width: 160,
@@ -182,16 +428,16 @@ class _MyHomePageState extends State<MyHomePage>{
                                   children: [
                                     SizedBox(height: 5),
                                     Row(children: [
-                                      Text(testelista[index]['name'], style: TextStyle(fontSize: 16),),
+                                      Text(users[index].name, style: TextStyle(fontSize: 16),),
                                      
                                        Icon(Icons.chevron_right_outlined, color: Colors.grey),
                                     ],),
                                     SizedBox(height: 5),
-                                    Text(testelista[index]['profissao']),
+                                    Text(users[index].profissao),
                                     SizedBox(height: 45),
                                     Row(children: [
                                       Text("Consulta: R\$ "),
-                                      Text(testelista[index]['valor'], style: TextStyle(color: Colors.green),),
+                                      Text(users[index].valor, style: TextStyle(color: Colors.green),),
                                     ],)
                                 ],),)
                               ],)
@@ -210,78 +456,74 @@ class _MyHomePageState extends State<MyHomePage>{
           ),
           Center(
             child: Container(
-              child: Text("Teste3", style: TextStyle(color: Colors.white),)//second screen
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                  height: 200,
+                  color: Colors.red,
+                  ),
+                  Row(
+                    children: [
+                      Container(
+                        height: 150,
+                        width: 100,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.only(
+                            topRight: Radius.circular(10),
+                            bottomRight: Radius.circular(10)
+                          )
+                        ),
+                        color: Colors.white,
+                      ),
+                      Container(
+                        height: 150,
+                        width: 300,
+                        color: Colors.black,
+
+                      )
+                    ],
+                  )
+                ],
+              )
             ),
           ),
           Center(
             child: Container(
-              color: Colors.amber,
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              height: 700,
-              child: Column(
-                children: <Widget>[
-                  Row(
+              height: double.infinity,
+              child: SingleChildScrollView(
+                physics: AlwaysScrollableScrollPhysics(),
+                padding:
+                    EdgeInsets.symmetric(horizontal: 40.0, vertical: 120.0),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
-                      Expanded(
-                          child: TextField(
-                        controller: _channelController,
-                        decoration: InputDecoration(
-                          errorText:
-                              _validateError ? 'Channel name is mandatory' : null,
-                          border: UnderlineInputBorder(
-                            borderSide: BorderSide(width: 1),
-                          ),
-                          hintText: 'Channel name',
-                        ),
-                      ))
-                    ],
-                  ),
-                  Column(
-                    children: [
-                      ListTile(
-                        title: Text(ClientRole.Broadcaster.toString()),
-                        leading: Radio(
-                          value: ClientRole.Broadcaster,
-                          groupValue: _role,
-                          onChanged: (ClientRole value) {
-                            setState(() {
-                              _role = value;
-                            });
-                          },
-                        ),
+                      Text(
+                        'Faça Login',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontFamily: 'OpenSans',
+                            fontSize: 30.0,
+                            fontWeight: FontWeight.bold),
                       ),
-                      ListTile(
-                        title: Text(ClientRole.Audience.toString()),
-                        leading: Radio(
-                          value: ClientRole.Audience,
-                          groupValue: _role,
-                          onChanged: (ClientRole value) {
-                            setState(() {
-                              _role = value;
-                            });
-                          },
-                        ),
-                      )
+                      SizedBox(height: 28.0),
+                      _buildEmailTF(),
+                      SizedBox(height: 28.0),
+                      _buildSenhaTF(),
+                      _buildEsqueceuSenhaBtn(),
+                      _buildLembrarAcessoCheckBox(),
+                      _buildLoginBtn(),
+                      _buildCadastrarBtn()
                     ],
                   ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 20),
-                    child: Row(
-                      children: <Widget>[
-                        Expanded(
-                          child: RaisedButton(
-                            onPressed: onJoin,
-                            child: Text('Join'),
-                            color: Colors.blueAccent,
-                            textColor: Colors.white,
-                          ),
-                        )
-                      ],
-                    ),
-                  )
-                ],
-              ),
-            ),
+                ),
+              ))
+          ),
+          Center(
+            child: Text("teste5")
           ),
           ],
         )
@@ -330,35 +572,5 @@ class _MyHomePageState extends State<MyHomePage>{
         ),
       );
   }
-
-Future<void> onJoin() async {
-    // update input validation
-    setState(() {
-      _channelController.text.isEmpty
-          ? _validateError = true
-          : _validateError = false;
-    });
-    if (_channelController.text.isNotEmpty) {
-      // await for camera and mic permissions before pushing video page
-      await _handleCameraAndMic();
-      // push video page with given channel name
-      await Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => CallPage(
-            channelName: _channelController.text,
-            role: _role,
-          ),
-        ),
-      );
-    }
-  }
-
-  Future<void> _handleCameraAndMic() async {
-    await PermissionHandler().requestPermissions(
-      [PermissionGroup.camera, PermissionGroup.microphone],
-    );
-  }
-
 }
 
